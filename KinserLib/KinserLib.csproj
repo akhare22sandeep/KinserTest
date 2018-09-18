@@ -58,6 +58,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Class1.cs" />
+    <Compile Include="Data\Data.cs" />
+    <Compile Include="Data\publc.cs" />
     <Compile Include="Helpers\Extensions.cs" />
     <Compile Include="Pages\BasePage.cs" />
     <Compile Include="Pages\LoginPage.cs" />

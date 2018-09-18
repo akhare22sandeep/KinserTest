@@ -15,12 +15,49 @@ namespace KinserTest
 		{
 
 			var login = new LoginPage(Driver);
-			
+
 			login.LogMeIn("kchatarkar.ihhc", "Sandeep2020", applicationUrl);
 
 			var patient = new PatientPage(Driver);
 
 			patient.GoToMyPatient("https://kinnser.net/am/printwrapper.cfm?PatientTaskKey=334174574");
+
+			var data =patient.GetContent();
+
+			patient.GoToMyPatient("https://kinnser.net/am/hotbox.cfm");
+
+			patient.GoToMyPatient("https://kinnser.net/am/OASIS/OASISC/index.cfm?PatientTaskKey=498385830");
+
+			patient.GoToMyPatient("https://kinnser.net/am/OASIS/OASISC/index.cfm?p=1#/index.cfm?p=1");
+
+			patient.EnterTime("00:00", "00:45", "09/14/2018");
+
+			do
+			{
+				patient.FillContent(data);
+			} while (patient.NextPageAvailable());
+
+
+		}
+
+		[Test]
+		public void KinserTest()
+		{
+
+			
+
+			var patient = new PatientPage(Driver);
+
+			patient.GoToMyPatient("file:///C:/Personal/Kanchan/Selenium/Page/Print%20Preview.html");
+
+			var data = patient.GetContent();
+
+
+			patient.GoToMyPatient("file:///C:/Personal/Kanchan/Selenium/Page/OASIS-C2%20Start%20of%20Care%20(PT)%20_%20Kinnser%20Software4.html");
+
+			patient.FillContent(data);
+
+
 		}
 
 		[Test]
