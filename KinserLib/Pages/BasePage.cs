@@ -17,7 +17,7 @@ namespace KinserLib.Pages
 	public class BasePage
 	{
 
-		public readonly string applicationUrl = ConfigurationSettings.AppSettings["ApplicationURL"];
+		
 			public IWebDriver driver;
 			private bool acceptNextAlert = true;
 			public readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

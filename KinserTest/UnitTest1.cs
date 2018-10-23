@@ -16,25 +16,34 @@ namespace KinserTest
 
 			var login = new LoginPage(Driver);
 
-			login.LogMeIn("kchatarkar.ihhc", "Sandeep2020", applicationUrl);
+			login.LogMeIn(username, password, applicationUrl);
 
 			var patient = new PatientPage(Driver);
 
-			patient.GoToMyPatient("https://kinnser.net/am/printwrapper.cfm?PatientTaskKey=334174574");
+			patient.NavigateToURL(copyFromUrl);
 
 			var data =patient.GetContent();
+			//var tableData = patient.GetTableContent();
 
-			patient.GoToMyPatient("https://kinnser.net/am/hotbox.cfm");
+			var careManagementData = patient.GetCareManagement();
 
-			patient.GoToMyPatient("https://kinnser.net/am/OASIS/OASISC/index.cfm?PatientTaskKey=498385830");
+			patient.NavigateToURL("https://kinnser.net/am/hotbox.cfm");
 
-			patient.GoToMyPatient("https://kinnser.net/am/OASIS/OASISC/index.cfm?p=1#/index.cfm?p=1");
+			patient.OpenPatient(patientName,taskName);
 
-			patient.EnterTime("00:00", "00:45", "09/14/2018");
+			patient.NavigateToURL("https://kinnser.net/am/OASIS/OASISC/index.cfm?p=1#/index.cfm?p=1");
+
+			patient.EnterTime("14:32", "15:17", "10/19/2018");
+
+			Driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(7);
 
 			do
 			{
-				patient.FillContent(data);
+				
+				//patient.FillCareManagement(tableData);
+				patient.FillContent(data, careManagementData);
+				
+
 			} while (patient.NextPageAvailable());
 
 
@@ -48,15 +57,15 @@ namespace KinserTest
 
 			var patient = new PatientPage(Driver);
 
-			patient.GoToMyPatient("file:///C:/Personal/Kanchan/Selenium/Page/Print%20Preview.html");
+			patient.NavigateToURL("file:///C:/Personal/Kanchan/Selenium/Page/Print%20Preview.html");
 
-			var data = patient.GetContent();
+			var data = patient.GetTableContent();
+			//var data2 = patient.GetCareManagement();
 
 
-			patient.GoToMyPatient("file:///C:/Personal/Kanchan/Selenium/Page/OASIS-C2%20Start%20of%20Care%20(PT)%20_%20Kinnser%20Software4.html");
+			//patient.NavigateToURL("file:///C:/Personal/Kanchan/Selenium/Page/CareManagement.html");
 
-			patient.FillContent(data);
-
+		
 
 		}
 

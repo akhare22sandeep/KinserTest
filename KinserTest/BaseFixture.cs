@@ -5,6 +5,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -17,9 +18,15 @@ namespace KinserTest
 	{
 		public readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+		public readonly string applicationUrl = ConfigurationSettings.AppSettings["ApplicationURL"];
+		public readonly string username = ConfigurationSettings.AppSettings["Username"];
+		public readonly string password = ConfigurationSettings.AppSettings["Password"];
+				public readonly string copyFromUrl = ConfigurationSettings.AppSettings["PatientCopyFromUrl"];
 
+		public readonly string patientName = ConfigurationSettings.AppSettings["PatientName"];
+		public readonly string taskName = ConfigurationSettings.AppSettings["TaskName"];
 		public IWebDriver Driver;
-		public readonly string applicationUrl = "https://kinnser.net/login.cfm";
+		
 
 		//[TestFixture]
 		//public void Init()
@@ -48,7 +55,7 @@ namespace KinserTest
 			Driver = new FirefoxDriver();
 			//Driver = new PhantomJSDriver();
 
-			//Driver.Manage().Timeouts().ImplicitWait(TimeSpan.FromSeconds(10));
+			
 
 			Log.Info("SetupTest Has been completed");
 		}
