@@ -267,6 +267,107 @@ namespace KinserLib.Pages
 			return data;
 		}
 
+
+		public IDictionary<string, DerivedAnswers> GetPLaneCare()
+		{
+			var trs = driver.FindElements(By.XPath("//div[@class='OasisHeading'  and contains(text(), 'Therapy Need and Plan of Care')]//parent::div//following::table[@id='mainTable'][1]//tr"));
+
+			IDictionary<string, DerivedAnswers> data = new Dictionary<string, DerivedAnswers>();
+
+			var mappings = Constants.HiddenMap();
+
+
+			foreach (IWebElement tr in trs)
+			{
+
+				DerivedAnswers eachAnswer = new DerivedAnswers();
+				bool answerFound = false;
+				string hidden = string.Empty;
+
+				if (tr.Exists(By.XPath("./input[@type='hidden']")))
+				{
+
+					hidden = tr.FindElement(By.XPath("./ input[@type='hidden']")).GetAttribute("name");
+
+				}
+				var selectedOptions = tr.FindElements(By.XPath(".//img"));
+
+				if (!string.IsNullOrEmpty(hidden))
+				{
+					//get selected options
+					hidden = mappings.ContainsKey(hidden) ? mappings[hidden] : hidden;
+
+					if (selectedOptions != null && selectedOptions.Count > 0)
+					{ 
+						int selectedOption = 0;
+						foreach (IWebElement radio in selectedOptions)
+						{
+
+							if (radio.GetAttribute("src").Contains("radioBtn-selected.png"))
+							{
+								//Log.Info(" " + hidden.Text + "Selected Option number is " + selectedOption);
+								answerFound = true;
+								eachAnswer.IsMultiChoise = false;
+								eachAnswer.AnswerCaptured = true;
+								eachAnswer.SelectedRadioButtonOption = selectedOption;
+								eachAnswer.Question = hidden;
+								break;
+							}
+							else
+							{
+								selectedOption++;
+							}
+						}
+
+						if (!answerFound)
+						{
+							List<int> selectedCheckox = new List<int>(); ;
+							for (int i = 0; i < selectedOptions.Count; i++)
+							{
+
+								if (selectedOptions[i].GetAttribute("src").Contains("checkbox-selected.png"))
+								{
+									//Log.Info(" " + hidden.Text + "Selected Checkbox is  number is " + i);
+									answerFound = true;
+									eachAnswer.IsMultiChoise = true;
+									eachAnswer.AnswerCaptured = true;
+									eachAnswer.SelectedCheckBoxes.Add(i);
+									eachAnswer.Question = hidden;
+									selectedCheckox.Add(i);
+
+								}
+
+							}
+
+
+						}
+					}
+
+
+				}
+
+				if (!answerFound)
+				{
+					Log.Info("No Answer found for Question=>" + hidden);
+				}
+				else
+				{
+					if (!data.ContainsKey(eachAnswer.Question))
+					{
+						data.Add(eachAnswer.Question, eachAnswer);
+					}
+					else
+					{
+						Log.Info("Duplicate Key " + eachAnswer.Question);
+					}
+				}
+
+
+			}
+
+			return data;
+		}
+
 		public IDictionary<string, DerivedAnswers> GetContent()
 		{
 
@@ -391,6 +492,9 @@ namespace KinserLib.Pages
 			driver.FindElement(By.Id("cTO_visitdate")).Clear();
 			driver.FindElement(By.Id("cTO_visitdate")).SendKeys(date);
 
+			//
+			driver.FindElement(By.Id("M0090_INFO_COMPLETED_DT")).Clear();
+			driver.FindElement(By.Id("M0090_INFO_COMPLETED_DT")).SendKeys(date);
 		}
 
 		public bool NextPageAvailable()
@@ -444,15 +548,26 @@ namespace KinserLib.Pages
 
 		}
 
-		public void FillContent(IDictionary<string, DerivedAnswers> data, IDictionary<string, DerivedAnswers> careManagementData)
+		public void FillContent(IDictionary<string, DerivedAnswers> data, IDictionary<string, DerivedAnswers> careManagementData, IDictionary<string, DerivedAnswers> plancareData)
 		{
 
 			var carmanagement = driver.FindElements(By.XPath("//li[@class='span-12' and contains(text(), 'Care Management')]"));
 
-			if (carmanagement.Count >0)
+			var planCare = driver.FindElements(By.XPath("//li[@class='span-12' and contains(text(), 'Data Items Collected at Inpatient Facility Admission or Agency Discharge Only')]"));
+
+			if (planCare.Count == 0)
+			{
+				planCare = driver.FindElements(By.XPath("//li[@class='span-12' and contains(text(), 'Therapy Need and Plan of Care')]"));
+			}
+			if (carmanagement.Count >0 )
 			{
 				FillCareManagement(careManagementData);
 			}
+			if (planCare.Count > 0)
+			{
+				FillCareManagement(plancareData);
+			}
+
 			
 
 			var divs1 = driver.FindElements(By.XPath("//div[contains(@id,'Section')]/div/p/span[@class='bold'][1]"));
@@ -491,14 +606,16 @@ namespace KinserLib.Pages
 
 								var selectedOptions = parent.FindElements(By.XPath(".//input[@type='checkbox']"));
 
-
-								for (int i = 0; i < answer.SelectedCheckBoxes.Count; i++)
+								if (selectedOptions.Count > 0)
 								{
-
-									if (!selectedOptions[answer.SelectedCheckBoxes[i]].Selected)
+									for (int i = 0; i < answer.SelectedCheckBoxes.Count; i++)
 									{
 
-										selectedOptions[answer.SelectedCheckBoxes[i]].Click();
+										if (!selectedOptions[answer.SelectedCheckBoxes[i]].Selected)
+										{
+
+											selectedOptions[answer.SelectedCheckBoxes[i]].Click();
+										}
 									}
 								}
 

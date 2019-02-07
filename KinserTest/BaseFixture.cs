@@ -49,7 +49,7 @@ namespace KinserTest
 
 			FirefoxDriverService service = FirefoxDriverService.CreateDefaultService();
 			service.FirefoxBinaryPath = @"C:\Program Files (x86)\Mozilla Firefox\firefox.exe";
-			FirefoxDriver driver = new FirefoxDriver(service);
+			
 
 
 			Driver = new FirefoxDriver();

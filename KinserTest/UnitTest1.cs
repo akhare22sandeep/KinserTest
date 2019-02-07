@@ -27,27 +27,31 @@ namespace KinserTest
 
 			var careManagementData = patient.GetCareManagement();
 
+			var plancareData = patient.GetPLaneCare();
+
 			patient.NavigateToURL("https://kinnser.net/am/hotbox.cfm");
+
+			Driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
 
 			patient.OpenPatient(patientName,taskName);
 
-			patient.NavigateToURL("https://kinnser.net/am/OASIS/OASISC/index.cfm?p=1#/index.cfm?p=1");
+			patient.NavigateToURL("https://kinnser.net/am/OASIS/OASISD/index.cfm?p=1#/index.cfm?p=1");
 
-			patient.EnterTime("14:32", "15:17", "10/19/2018");
+			patient.EnterTime("12:30", "13:30", "01/31/2019");	
 
-			Driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(7);
+			Driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
 
 			do
 			{
 				
 				//patient.FillCareManagement(tableData);
-				patient.FillContent(data, careManagementData);
+					patient.FillContent(data, careManagementData, plancareData);
 				
 
 			} while (patient.NextPageAvailable());
 
 
-		}
+		}		
 
 		[Test]
 		public void KinserTest()
@@ -59,13 +63,15 @@ namespace KinserTest
 
 			patient.NavigateToURL("file:///C:/Personal/Kanchan/Selenium/Page/Print%20Preview.html");
 
-			var data = patient.GetTableContent();
-			//var data2 = patient.GetCareManagement();
+			
+		//	var data2 = patient.GetCareManagement();
 
 
-			//patient.NavigateToURL("file:///C:/Personal/Kanchan/Selenium/Page/CareManagement.html");
+			patient.NavigateToURL("file:///C:/Personal/Kanchan/Selenium/Page/DischargeNote.html");
 
-		
+			//patient.FillCareManagement(data);
+
+
 
 		}
 
