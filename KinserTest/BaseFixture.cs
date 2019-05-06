@@ -69,11 +69,11 @@ namespace KinserTest
 			//Utility.SaveAsImage(Driver, "SomeName");
 			////  Log.Info(TestContext.CurrentContext.Test.Name + " Test has been executed with result =>" + TestContext.CurrentContext.Result.Outcome);
 			//Log.Info("##################################################################");
-			//if (Driver != null)
-			//{
-			//    Driver.Quit();
-			//    Driver.Dispose();
-			//}
+			if (Driver != null)
+			{
+				Driver.Quit();
+				Driver.Dispose();
+			}
 
 		}
 

@@ -8,12 +8,16 @@ using System.Threading.Tasks;
 using KinserLib.Data;
 using OpenQA.Selenium.Support.UI;
 using KinserLib.Helpers;
+using Newtonsoft.Json;
 
 namespace KinserLib.Pages
 {
 	public class PatientPage : BasePage
 	{
 
+		string patientHeight = string.Empty;
+		string patientWeigt = string.Empty;
+		IDictionary<string, List<DerivedAnswers>> dictionary = new Dictionary<string, List<DerivedAnswers>>();
 		public PatientPage(IWebDriver driver)
 			: base(driver)
 		{
@@ -169,6 +173,220 @@ namespace KinserLib.Pages
 
 		}
 
+
+		public void GetVitalSign()
+		{
+			var trs = driver.FindElements(By.XPath("//div[@id='vitalsigns']//table[@id='mainTable']//tr[2]//td[2]//ul//li[2]"));
+			if (trs.Count > 0)
+			{
+				patientHeight = trs[0].Text;
+				patientWeigt = trs[1].Text;
+			}
+
+			var trs2 = driver.FindElements(By.XPath("//div[@id='vitalsigns']//table[@id='mainTable']//tr[3]//td[2]"));
+
+			if (trs2.Count > 0)
+			{
+
+				var radioButtons = trs2[0].FindElements(By.XPath(".//img"));
+			}
+
+		}
+
+		public void PutVitalSign()
+		{
+			try
+			{
+				var height = driver.FindElement(By.Id("cVS_height"));
+
+				IJavaScriptExecutor executor = (IJavaScriptExecutor)driver;
+
+				if (height != null)
+				{
+					executor.ExecuteScript("arguments[0].value='" + patientHeight + "';", height);
+				}
+
+				var weight = driver.FindElement(By.Id("cVS_weight"));
+				if (weight != null)
+				{
+					executor.ExecuteScript("arguments[0].value='" + patientWeigt + "';", weight);
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error("Vital Sign Failed " + ex.ToString());
+			}
+
+		}
+
+		public void InsertGenericContent(string key)
+		{
+			try
+			{
+				List<DerivedAnswers> data;
+				if (dictionary.TryGetValue(key, out data))
+				{
+					var checkboxes = driver.FindElements(By.XPath("//*[@type='checkbox' or @type='radio']"));
+
+					if (checkboxes.Count > 0)
+					{
+
+						foreach (DerivedAnswers answer in data)
+						{
+							if (!answer.IsTextArea)
+							{
+
+								if (!checkboxes[answer.SelectedOption].Selected)
+								{
+									checkboxes[answer.SelectedOption].Click();
+								}
+							}
+						}
+					}
+
+
+					var textboxes = driver.FindElements(By.XPath("//table[@id='mainTable']//*[contains(@name,'isOasis') and not(@type='hidden' or @type='checkbox' or @type='radio')]"));
+
+					if (textboxes.Count > 0)
+					{
+						IJavaScriptExecutor executor = (IJavaScriptExecutor)driver;
+						var textData = data.Where(x => x.IsTextArea == true).ToList();
+			
+						foreach (DerivedAnswers answer in textData)
+						{
+								
+									executor.ExecuteScript("arguments[0].value='" + answer.Text + "';", textboxes[answer.SelectedOption]);
+								
+
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error("Exception in page " + key, ex);
+			}
+			
+
+		}
+
+		public List<DerivedAnswers> GetText(string xPath,string key)
+		{
+			var trs = driver.FindElements(By.XPath(xPath));
+			List<DerivedAnswers> data = new List<DerivedAnswers>();
+
+			if (trs.Count > 0)
+			{
+				int selectedTextArea = 0;
+				foreach (IWebElement elem in trs)
+				{
+
+					// get the text 
+					var textElements = elem.FindElements(By.XPath(".//*[contains(translate(@class, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'),'printdata') and not(descendant::span)]"));
+					
+					foreach (IWebElement text in textElements)
+					{
+						var eachAnswer = new DerivedAnswers();
+
+						if (!string.IsNullOrWhiteSpace(text.Text))
+						{
+							eachAnswer.Text = text.Text.Trim();
+							eachAnswer.IsTextArea = true;
+							eachAnswer.SelectedOption = selectedTextArea;
+							data.Add(eachAnswer);
+						}
+
+						selectedTextArea++;
+
+
+					}
+				}
+
+				
+			}
+
+			dictionary.Add(key, data);
+
+			return data;
+
+		}
+
+		public void GetContentByPage()
+		{
+			foreach (KeyValuePair<string, string> keyValue in Constants.TitleMap())
+			{
+
+				GetConentent2(keyValue.Value, keyValue.Key);	
+
+			}
+
+		}
+
+		public void GetConentent2(string xPath, string key)
+		{
+			var trs = driver.FindElements(By.XPath(xPath));
+			List<DerivedAnswers> data = new List<DerivedAnswers>();
+			if (trs.Count > 0)
+			{
+
+				foreach (IWebElement elem in trs)
+				{
+					// checkboxes and radio buttons
+					var radioButtons = elem.FindElements(By.XPath(".//img"));
+
+					//get selected options
+
+
+					if (radioButtons != null && radioButtons.Count > 0)
+					{
+						int selectedOption = 0;
+						foreach (IWebElement radio in radioButtons)
+						{
+							var eachAnswer = new DerivedAnswers();
+							bool answerFound = false;
+
+							if (radio.GetAttribute("src").Contains("radioBtn-selected.png"))
+							{
+								//Log.Info(" " + hidden.Text + "Selected Option number is " + selectedOption);
+								answerFound = true;
+								eachAnswer.IsMultiChoise = false;
+								eachAnswer.AnswerCaptured = true;
+								eachAnswer.SelectedOption = selectedOption;
+
+								data.Add(eachAnswer);
+							}
+							else if (radio.GetAttribute("src").Contains("checkbox-selected.png"))
+							{
+								//Log.Info(" " + hidden.Text + "Selected Checkbox is  number is " + i);
+								answerFound = true;
+								eachAnswer.IsMultiChoise = true;
+								eachAnswer.AnswerCaptured = true;
+								eachAnswer.SelectedOption = selectedOption;
+
+								data.Add(eachAnswer);
+
+							}
+
+							selectedOption++;
+
+						}
+					}
+
+					
+				}
+
+				var data2 = GetText(xPath,key);
+				data.AddRange(data2);
+				if (!dictionary.Keys.Contains(key))
+				{
+					dictionary.Add(key, data);
+				}
+
+			}
+
+
+		}
+
 		public IDictionary<string, DerivedAnswers> GetCareManagement()
 		{
 			var trs = driver.FindElements(By.XPath("//div[@class='OasisHeading'  and contains(text(), 'Care Management')]//parent::div//following::table[@id='mainTable'][1]//tr"));
@@ -298,7 +516,7 @@ namespace KinserLib.Pages
 					hidden = mappings.ContainsKey(hidden) ? mappings[hidden] : hidden;
 
 					if (selectedOptions != null && selectedOptions.Count > 0)
-					{ 
+					{
 						int selectedOption = 0;
 						foreach (IWebElement radio in selectedOptions)
 						{
@@ -479,6 +697,8 @@ namespace KinserLib.Pages
 		}
 
 
+		
+
 		public void EnterTime(string enterTime, string outTime, string date)
 		{
 
@@ -488,13 +708,18 @@ namespace KinserLib.Pages
 			driver.FindElement(By.Id("cTO_timeout")).Clear();
 			driver.FindElement(By.Id("cTO_timeout")).SendKeys(outTime);
 
-
 			driver.FindElement(By.Id("cTO_visitdate")).Clear();
-			driver.FindElement(By.Id("cTO_visitdate")).SendKeys(date);
+			var element = driver.FindElement(By.Id("cTO_visitdate"));
+
+			IJavaScriptExecutor executor = (IJavaScriptExecutor)driver;
+			executor.ExecuteScript("arguments[0].value='" + date + "';", element);
 
 			//
 			driver.FindElement(By.Id("M0090_INFO_COMPLETED_DT")).Clear();
-			driver.FindElement(By.Id("M0090_INFO_COMPLETED_DT")).SendKeys(date);
+			var element2 = driver.FindElement(By.Id("M0090_INFO_COMPLETED_DT"));
+			executor.ExecuteScript("arguments[0].value='" + date + "';", element2);
+
+
 		}
 
 		public bool NextPageAvailable()
@@ -551,24 +776,42 @@ namespace KinserLib.Pages
 		public void FillContent(IDictionary<string, DerivedAnswers> data, IDictionary<string, DerivedAnswers> careManagementData, IDictionary<string, DerivedAnswers> plancareData)
 		{
 
-			var carmanagement = driver.FindElements(By.XPath("//li[@class='span-12' and contains(text(), 'Care Management')]"));
-
-			var planCare = driver.FindElements(By.XPath("//li[@class='span-12' and contains(text(), 'Data Items Collected at Inpatient Facility Admission or Agency Discharge Only')]"));
-
-			if (planCare.Count == 0)
-			{
-				planCare = driver.FindElements(By.XPath("//li[@class='span-12' and contains(text(), 'Therapy Need and Plan of Care')]"));
-			}
-			if (carmanagement.Count >0 )
-			{
-				FillCareManagement(careManagementData);
-			}
-			if (planCare.Count > 0)
-			{
-				FillCareManagement(plancareData);
-			}
-
 			
+			Log.Info("JSON " + JsonConvert.SerializeObject(data));
+			Log.Info("JSON " + JsonConvert.SerializeObject(careManagementData));
+			Log.Info("JSON " + JsonConvert.SerializeObject(plancareData));
+			Log.Info("JSON " + JsonConvert.SerializeObject(dictionary));
+			var pageTitle =driver.FindElement(By.XPath("//li[@class='span-12']"));
+			
+			switch (pageTitle?.Text)
+			{
+
+				case "Care Management":
+					FillCareManagement(careManagementData);
+
+					break;
+				case "Data Items Collected at Inpatient Facility Admission or Agency Discharge Only":
+				case "Therapy Need and Plan of Care":
+					FillCareManagement(plancareData);
+					break;
+				case "Patient History and Diagnoses":
+					PutVitalSign();
+					break;
+
+				default:
+
+					if (Constants.TitleMap().ContainsKey(pageTitle.Text))
+					{
+						InsertGenericContent(pageTitle.Text);
+					}
+				
+
+					break;
+
+			}
+			
+
+
 
 			var divs1 = driver.FindElements(By.XPath("//div[contains(@id,'Section')]/div/p/span[@class='bold'][1]"));
 
